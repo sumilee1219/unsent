@@ -1,176 +1,267 @@
-// 캐릭터 카운터
+// Import Firebase modules
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+import { getFirestore, collection, addDoc, query, where, orderBy, getDocs, deleteDoc, doc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+// Your web app's Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyA8hT35rl_8uO27LoBSAWjU89wRtF4TxL4",
+  authDomain: "unsent-c49a2.firebaseapp.com",
+  projectId: "unsent-c49a2",
+  storageBucket: "unsent-c49a2.firebasestorage.app",
+  messagingSenderId: "736167237909",
+  appId: "1:736167237909:web:3792aaa732ebae0430311c"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+console.log('Firebase initialized successfully');
+
+// Character counter
 const messageInput = document.getElementById('message-input');
 const charCount = document.getElementById('char-count');
 
 messageInput.addEventListener('input', () => {
-    charCount.textContent = messageInput.value.length;
+  charCount.textContent = messageInput.value.length;
 });
 
-// 화면 전환
-function switchScreen(screenId) {
-    document.querySelectorAll('.screen').forEach(screen => {
-        screen.classList.remove('active');
-    });
-    document.getElementById(screenId).classList.add('active');
+// Screen switching
+window.switchScreen = function(screenId) {
+  document.querySelectorAll('.screen').forEach(screen => {
+    screen.classList.remove('active');
+  });
+  document.getElementById(screenId).classList.add('active');
 }
 
-// 메시지 전송 (저장)
-async function submitMessage() {
-    const message = messageInput.value.trim();
-    
-    if (!message) {
-        showSuccess('not ready to send?', false);
-        return;
-    }
+// Storage functions using Firebase Firestore
+window.submitMessage = async function() {
+  const message = messageInput.value.trim();
+  
+  if (!message) {
+    showSuccess('not ready to send?', false);
+    return;
+  }
 
+  try {
+    // Get location
+    let location = 'somewhere in the world';
     try {
-        const messageId = 'msg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-        let location = 'somewhere in the world';
-
-        try {
-            const position = await new Promise((resolve, reject) => {
-                navigator.geolocation.getCurrentPosition(resolve, reject, {
-                    timeout: 5000,
-                    enableHighAccuracy: false
-                });
-            });
-            location = `${position.coords.latitude.toFixed(4)}, ${position.coords.longitude.toFixed(4)}`;
-        } catch (geoError) {
-            console.log('Location not available');
-        }
-        
-        const messageData = {
-            text: message,
-            timestamp: Date.now(),
-            id: messageId,
-            location: location
-        };
-
-        // 로컬 스토리지를 기본으로 사용 (window.storage가 없을 경우 대비)
-        const storageProvider = window.storage || {
-            set: async (k, v) => localStorage.setItem(k, v),
-            list: async (prefix) => ({ keys: Object.keys(localStorage).filter(k => k.startsWith(prefix)) }),
-            get: async (k) => ({ value: localStorage.getItem(k) }),
-            delete: async (k) => localStorage.removeItem(k)
-        };
-
-        await storageProvider.set(messageId, JSON.stringify(messageData));
-        
-        messageInput.value = '';
-        charCount.textContent = '0';
-        showSuccess('your message has been released into the void...', true);
-        
-        setTimeout(() => {
-            switchScreen('collection-screen');
-            loadMessages();
-        }, 2000);
-
-    } catch (error) {
-        console.error('Submission failed:', error);
-        showSuccess('failed to send message.', false);
+      const position = await new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          timeout: 5000,
+          enableHighAccuracy: false
+        });
+      });
+      
+      const lat = position.coords.latitude.toFixed(4);
+      const lon = position.coords.longitude.toFixed(4);
+      location = `${lat}, ${lon}`;
+      
+    } catch (geoError) {
+      console.log('Location not available:', geoError);
     }
+    
+    const messageData = {
+      text: message,
+      timestamp: Date.now(),
+      location: location
+    };
+
+    // Save to Firebase
+    await addDoc(collection(db, 'messages'), messageData);
+    
+    // Clear input
+    messageInput.value = '';
+    charCount.textContent = '0';
+    
+    // Show success message
+    showSuccess('your message has been released into the void...', true);
+    
+    // Wait a bit then switch to collection
+    setTimeout(() => {
+      switchScreen('collection-screen');
+      loadMessages();
+    }, 2000);
+
+  } catch (error) {
+    console.error('Failed to submit message:', error);
+    showSuccess('failed to send message. please try again.', false);
+  }
 }
 
 function showSuccess(message, isSuccess) {
-    const container = document.getElementById('success-container');
-    const colorStyle = isSuccess ? '' : 'background: #8B7355; color: white;';
-    container.innerHTML = `<div class="success-message" style="${colorStyle}">${message}</div>`;
-    setTimeout(() => { container.innerHTML = ''; }, 3000);
+  const container = document.getElementById('success-container');
+  container.innerHTML = `<div class="success-message" style="${isSuccess ? '' : 'background: #8B7355; color: var(--white);'}">${message}</div>`;
+  
+  setTimeout(() => {
+    container.innerHTML = '';
+  }, 3000);
 }
 
-// 메시지 불러오기
-async function loadMessages() {
-    const container = document.getElementById('messages-container');
-    container.innerHTML = '<div class="empty-state">loading messages...</div>';
+window.loadMessages = async function() {
+  const container = document.getElementById('messages-container');
+  container.innerHTML = '<div class="empty-state">loading messages...</div>';
 
-    const storageProvider = window.storage || {
-        list: async (prefix) => ({ keys: Object.keys(localStorage).filter(k => k.startsWith(prefix)) }),
-        get: async (k) => ({ value: localStorage.getItem(k) }),
-        delete: async (k) => localStorage.removeItem(k)
-    };
+  try {
+    const now = Date.now();
+    const oneWeek = 7 * 24 * 60 * 60 * 1000;
+    const oneWeekAgo = now - oneWeek;
 
-    try {
-        const result = await storageProvider.list('msg_');
-        if (!result.keys || result.keys.length === 0) {
-            container.innerHTML = '<div class="empty-state">no messages yet.</div>';
-            return;
-        }
+    // Get messages from last 7 days
+    const q = query(
+      collection(db, 'messages'),
+      where('timestamp', '>', oneWeekAgo),
+      orderBy('timestamp', 'desc')
+    );
+    
+    const querySnapshot = await getDocs(q);
 
-        const messages = [];
-        const now = Date.now();
-        const oneWeek = 7 * 24 * 60 * 60 * 1000;
-
-        for (const key of result.keys) {
-            const msgResult = await storageProvider.get(key);
-            if (msgResult.value) {
-                const msgData = JSON.parse(msgResult.value);
-                const age = now - msgData.timestamp;
-                
-                if (age > oneWeek) {
-                    await storageProvider.delete(key);
-                } else {
-                    msgData.age = age;
-                    messages.push(msgData);
-                }
-            }
-        }
-
-        messages.sort((a, b) => b.timestamp - a.timestamp);
-        container.innerHTML = '';
-        messages.forEach(msg => {
-            const card = createMessageCard(msg);
-            container.appendChild(card);
-        });
-    } catch (error) {
-        container.innerHTML = '<div class="empty-state">failed to load messages.</div>';
+    if (querySnapshot.empty) {
+      container.innerHTML = '<div class="empty-state">no messages yet. be the first to share something unsent...</div>';
+      return;
     }
+
+    const messages = [];
+    querySnapshot.forEach((docSnap) => {
+      const data = docSnap.data();
+      data.id = docSnap.id;
+      data.age = now - data.timestamp;
+      messages.push(data);
+    });
+
+    // Display messages
+    container.innerHTML = '';
+    messages.forEach(msg => {
+      const card = createMessageCard(msg);
+      container.appendChild(card);
+    });
+
+    // Clean up old messages
+    const oldQuery = query(
+      collection(db, 'messages'),
+      where('timestamp', '<', oneWeekAgo)
+    );
+    
+    const oldSnapshot = await getDocs(oldQuery);
+    oldSnapshot.forEach((docSnap) => {
+      deleteDoc(doc(db, 'messages', docSnap.id));
+    });
+
+  } catch (error) {
+    console.error('Failed to load messages:', error);
+    container.innerHTML = '<div class="empty-state">failed to load messages. please try again.</div>';
+  }
 }
 
 function createMessageCard(msgData) {
-    const card = document.createElement('div');
-    card.className = 'message-card';
-    
-    const oneDay = 24 * 60 * 60 * 1000;
-    const fadingLevel = Math.min(Math.floor(msgData.age / oneDay) + 1, 7);
-    card.classList.add(`fading-${fadingLevel}`);
-    
-    const preview = msgData.text.length > 150 ? msgData.text.substring(0, 150) + '...' : msgData.text;
-    
-    card.innerHTML = `
-        <div class="message-text">${escapeHtml(preview)}</div>
-        <div class="message-meta"><span>${getTimeAgo(msgData.timestamp)}</span></div>
-    `;
-    card.onclick = () => openMessageModal(msgData);
-    return card;
+  const card = document.createElement('div');
+  card.className = 'message-card';
+  
+  // Calculate fading level (1-7 based on days)
+  const oneDay = 24 * 60 * 60 * 1000;
+  const daysPassed = Math.floor(msgData.age / oneDay);
+  const fadingLevel = Math.min(daysPassed + 1, 7);
+  card.classList.add(`fading-${fadingLevel}`);
+  
+  // Calculate time remaining
+  const oneWeek = 7 * 24 * 60 * 60 * 1000;
+  const timeRemaining = oneWeek - msgData.age;
+  const daysRemaining = Math.ceil(timeRemaining / oneDay);
+  
+  // Truncate text for preview
+  const preview = msgData.text.length > 150 
+    ? msgData.text.substring(0, 150) + '...' 
+    : msgData.text;
+  
+  card.innerHTML = `
+    <div class="message-text">${escapeHtml(preview)}</div>
+    <div class="message-meta">
+      <span>${getTimeAgo(msgData.timestamp)}</span>
+    </div>
+  `;
+  
+  card.onclick = () => openMessageModal(msgData, daysRemaining);
+  
+  return card;
 }
 
-function openMessageModal(msgData) {
-    const modal = document.getElementById('message-modal');
-    document.getElementById('modal-message').textContent = msgData.text;
-    const date = new Date(msgData.timestamp);
-    document.getElementById('modal-meta').innerHTML = `
-        <div>${date.toLocaleString()}</div>
-        <div style="margin-top: 8px;">from ${msgData.location}</div>
-    `;
-    modal.classList.add('active');
+function openMessageModal(msgData, daysRemaining) {
+  const modal = document.getElementById('message-modal');
+  const messageDiv = document.getElementById('modal-message');
+  const metaDiv = document.getElementById('modal-meta');
+  
+  messageDiv.textContent = msgData.text;
+  
+  // Format the timestamp
+  const date = new Date(msgData.timestamp);
+  const formattedDate = date.toLocaleDateString('en-US', { 
+    month: 'long', 
+    day: 'numeric', 
+    year: 'numeric' 
+  });
+  const formattedTime = date.toLocaleTimeString('en-US', { 
+    hour: 'numeric', 
+    minute: '2-digit',
+    hour12: true 
+  });
+  
+  const locationText = msgData.location || 'somewhere in the world';
+  
+  metaDiv.innerHTML = `
+    <div>${formattedTime}, ${formattedDate}</div>
+    <div style="margin-top: 8px;">from ${locationText}</div>
+  `;
+  
+  modal.classList.add('active');
 }
 
-function closeModal() {
-    document.getElementById('message-modal').classList.remove('active');
+window.closeModal = function(event) {
+  const modal = document.getElementById('message-modal');
+  modal.classList.remove('active');
 }
 
 function getTimeAgo(timestamp) {
-    const diff = Date.now() - timestamp;
-    const mins = Math.floor(diff / 60000);
-    const hrs = Math.floor(diff / 3600000);
-    const days = Math.floor(diff / 86400000);
-    if (days > 0) return `${days}d ago`;
-    if (hrs > 0) return `${hrs}h ago`;
-    return `${mins || 0}m ago`;
+  const now = Date.now();
+  const diff = now - timestamp;
+  
+  const minutes = Math.floor(diff / 60000);
+  const hours = Math.floor(diff / 3600000);
+  const days = Math.floor(diff / 86400000);
+  
+  if (days > 0) return `${days} day${days !== 1 ? 's' : ''} ago`;
+  if (hours > 0) return `${hours} hour${hours !== 1 ? 's' : ''} ago`;
+  if (minutes > 0) return `${minutes} minute${minutes !== 1 ? 's' : ''} ago`;
+  return 'just now';
 }
 
 function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
 }
+
+// Auto-refresh collection every 30 seconds when viewing
+let refreshInterval;
+
+// Set up observer to start/stop refresh based on active screen
+const observer = new MutationObserver(() => {
+  const collectionScreen = document.getElementById('collection-screen');
+  if (collectionScreen.classList.contains('active')) {
+    if (!refreshInterval) {
+      refreshInterval = setInterval(() => {
+        loadMessages();
+      }, 30000);
+    }
+  } else {
+    if (refreshInterval) {
+      clearInterval(refreshInterval);
+      refreshInterval = null;
+    }
+  }
+});
+
+observer.observe(document.getElementById('collection-screen'), {
+  attributes: true,
+  attributeFilter: ['class']
+});
