@@ -319,7 +319,9 @@
     }
 
     .modal-message {
-      font-family: 'Hydrophilia Liquid', sans-serif;
+      font-family: "hydrophilia-liquid", sans-serif;
+      font-weight: 400;
+      font-style: normal;
       font-size: 1.1rem;
       color: var(--text-dark);
       line-height: 1.7;
@@ -511,7 +513,7 @@
         messageInput.value = '';
         charCount.textContent = '0';
         
-        showSuccess('your message has been released into the void...', true);
+          showSuccess('your message has been released...', true);
         
         setTimeout(() => {
           switchScreen('collection-screen');
