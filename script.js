@@ -211,7 +211,7 @@ function openMessageModal(msgData, daysRemaining) {
   
   metaDiv.innerHTML = `
     <div>${formattedTime}, ${formattedDate}</div>
-    <div style="margin-top: 8px;">from ${locationText}</div>
+    <div>from ${locationText}</div>
   `;
   
   modal.classList.add('active');
