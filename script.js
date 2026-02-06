@@ -34,7 +34,7 @@ window.switchScreen = function(screenId) {
   document.getElementById(screenId).classList.add('active');
 }
 
-// Storage functions using Firebase Firestore
+// Submit message function
 window.submitMessage = async function() {
   const message = messageInput.value.trim();
   
@@ -99,6 +99,7 @@ function showSuccess(message, isSuccess) {
   }, 3000);
 }
 
+// Load messages function
 window.loadMessages = async function() {
   const container = document.getElementById('messages-container');
   container.innerHTML = '<div class="empty-state">loading messages...</div>';
