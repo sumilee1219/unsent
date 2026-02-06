@@ -316,6 +316,10 @@ body {
   font-size: 0.85rem;
 }
 
+.modal-meta div + div {
+  margin-top: 8px;
+}
+
 /* Empty state */
 .empty-state {
   grid-column: 1 / -1;
