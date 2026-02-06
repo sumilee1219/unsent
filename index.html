@@ -1,59 +1,65 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>To You, Who Will Never Read This</title>
-    <link href="https://db.onlinewebfonts.com/c/0000f72cb89d7fa508eac49a3c93c421?family=Hydrophilia+Liquid" rel="stylesheet" type="text/css"/>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>To You, Who Will Never Read This</title>
+  <link href="https://db.onlinewebfonts.com/c/0000f72cb89d7fa508eac49a3c93c421?family=Hydrophilia+Liquid" rel="stylesheet" type="text/css"/>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <div id="title-screen" class="screen active">
-        <h1 class="title">To You, Who Will Never Read This</h1>
-        <h2 class="korean-title">보내지 못한 마음</h2>
-        <p class="subtitle">A space for words left unsaid, feelings unshared, and messages that never found their way.</p>
-        <div class="button-group">
-            <button class="btn" onclick="switchScreen('submit-screen')">write</button>
-            <button class="btn" onclick="switchScreen('collection-screen'); loadMessages()">collection</button>
-        </div>
+  <!-- Title Screen -->
+  <div id="title-screen" class="screen active">
+    <h1 class="title">To You, Who Will Never Read This</h1>
+    <h2 class="korean-title">보내지 못한 마음</h2>
+    <p class="subtitle">A space for words left unsaid, feelings unshared, and messages that never found their way.</p>
+    <div class="button-group">
+      <button class="btn" onclick="switchScreen('submit-screen')">write</button>
+      <button class="btn" onclick="switchScreen('collection-screen'); loadMessages()">collection</button>
     </div>
+  </div>
 
-    <div id="submit-screen" class="screen">
-        <div class="submit-container">
-            <div id="success-container"></div>
-            <textarea 
-                id="message-input" 
-                class="message-input" 
-                placeholder="write here..."
-                maxlength="1000"
-            ></textarea>
-            <div class="char-count"><span id="char-count">0</span>/1000</div>
-            <div class="button-group">
-                <button class="btn" onclick="submitMessage()">send?</button>
-                <button class="btn" onclick="switchScreen('title-screen')">nevermind</button>
-            </div>
-        </div>
+  <!-- Submit Screen -->
+  <div id="submit-screen" class="screen">
+    <div class="submit-container">
+      <div id="success-container"></div>
+      <textarea 
+        id="message-input" 
+        class="message-input" 
+        placeholder="write here..."
+        maxlength="1000"
+      ></textarea>
+      <div class="char-count"><span id="char-count">0</span>/1000</div>
+      <div class="button-group">
+        <button class="btn" onclick="submitMessage()">send?</button>
+        <button class="btn" onclick="switchScreen('title-screen')">nevermind</button>
+      </div>
     </div>
+  </div>
 
-    <div id="collection-screen" class="screen">
-        <button class="btn back-btn" onclick="switchScreen('title-screen')">← back</button>
-        <div class="collection-header">
-            <h2 class="collection-title">fading away in 7 days</h2>
-        </div>
-        <div id="messages-container" class="messages-container">
-            <div class="empty-state">loading messages...</div>
-        </div>
+  <!-- Collection Screen -->
+  <div id="collection-screen" class="screen">
+    <button class="btn back-btn" onclick="switchScreen('title-screen')">← back</button>
+    <div class="collection-header">
+      <h2 class="collection-title">fading away in 7 days</h2>
     </div>
-
-    <div id="message-modal" class="modal" onclick="closeModal(event)">
-        <div class="modal-content" onclick="event.stopPropagation()">
-            <button class="modal-close" onclick="closeModal()">×</button>
-            <div id="modal-message" class="modal-message"></div>
-            <div id="modal-meta" class="modal-meta"></div>
-        </div>
+    <div id="messages-container" class="messages-container">
+      <div class="empty-state">loading messages...</div>
     </div>
+  </div>
 
-    <script src="script.js"></script>
+  <!-- Message Modal -->
+  <div id="message-modal" class="modal" onclick="closeModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <button class="modal-close" onclick="closeModal()">×</button>
+      <div id="modal-message" class="modal-message"></div>
+      <div id="modal-meta" class="modal-meta"></div>
+    </div>
+  </div>
+
+  <!-- Firebase SDK -->
+  <script type="module" src="app.js"></script>
+
 </body>
 </html>
