@@ -1,0 +1,239 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --white: #FFFFFF;
+    --main-color: #bfe3e5;
+    --light-main: #d9f0f1;
+    --dark-main: #8ac5c8;
+    --text-dark: #2a5456;
+}
+
+body {
+    font-family: 'Hydrophilia Liquid', sans-serif;
+    background: var(--main-color);
+    overflow-x: hidden;
+    cursor: default;
+}
+
+.screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.5s ease-out;
+    padding: 20px;
+}
+
+.screen.active {
+    display: flex;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Title Screen */
+.title {
+    font-size: 2.5rem;
+    color: var(--white);
+    margin-bottom: 0.5rem;
+    text-align: center;
+}
+
+.korean-title {
+    font-size: 1.5rem;
+    color: var(--white);
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.subtitle {
+    font-size: 1rem;
+    color: var(--text-dark);
+    margin-bottom: 2.5rem;
+    text-align: center;
+    max-width: 500px;
+    line-height: 1.5;
+}
+
+.btn {
+    font-family: 'Hydrophilia Liquid', sans-serif;
+    font-size: 1rem;
+    padding: 15px 35px;
+    background: var(--white);
+    color: var(--text-dark);
+    border: none;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    margin: 8px;
+}
+
+.btn:hover { opacity: 0.8; }
+
+/* Submit Screen */
+.submit-container {
+    width: 90%;
+    max-width: 600px;
+}
+
+.message-input {
+    font-family: 'Hydrophilia Liquid', sans-serif;
+    font-size: 1rem;
+    padding: 20px;
+    border: 2px solid var(--white);
+    background: var(--white);
+    width: 100%;
+    min-height: 200px;
+    outline: none;
+    resize: vertical;
+    margin-bottom: 15px;
+    color: var(--text-dark);
+}
+
+.char-count {
+    text-align: right;
+    color: var(--white);
+    font-size: 0.85rem;
+    margin-bottom: 20px;
+}
+
+.button-group {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+/* Collection Screen */
+#collection-screen {
+    overflow-y: auto;
+    justify-content: flex-start;
+    padding: 40px 20px;
+}
+
+.collection-title {
+    font-size: 2rem;
+    color: var(--white);
+    margin-bottom: 40px;
+}
+
+.back-btn {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 1000;
+}
+
+.messages-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 30px;
+    width: 100%;
+    max-width: 1200px;
+}
+
+.message-card {
+    background: var(--white);
+    padding: 25px;
+    cursor: pointer;
+    position: relative;
+}
+
+.message-text {
+    font-size: 0.95rem;
+    color: var(--text-dark);
+    line-height: 1.6;
+    max-height: 120px;
+    overflow: hidden;
+    position: relative;
+}
+
+.message-text::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 25px;
+    background: linear-gradient(transparent, var(--white));
+}
+
+.message-meta {
+    font-size: 0.8rem;
+    color: var(--dark-main);
+    margin-top: 15px;
+    padding-top: 12px;
+    border-top: 1px solid var(--light-main);
+}
+
+/* Modal */
+.modal {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(191, 227, 229, 0.95);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+}
+
+.modal.active { display: flex; }
+
+.modal-content {
+    background: var(--white);
+    padding: 40px;
+    width: 90%;
+    max-width: 650px;
+    max-height: 80vh;
+    overflow-y: auto;
+    position: relative;
+}
+
+.modal-close {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: none;
+    border: none;
+    font-size: 1.8rem;
+    cursor: pointer;
+}
+
+/* Fading states */
+.fading-1 { opacity: 0.95; }
+.fading-2 { opacity: 0.85; }
+.fading-3 { opacity: 0.7; }
+.fading-4 { opacity: 0.55; }
+.fading-5 { opacity: 0.4; }
+.fading-6 { opacity: 0.25; }
+.fading-7 { opacity: 0.1; }
+
+.success-message {
+    background: var(--white);
+    padding: 18px;
+    text-align: center;
+    margin-bottom: 20px;
+    color: var(--text-dark);
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 768px) {
+    .title { font-size: 2rem; }
+    .messages-container { grid-template-columns: 1fr; }
+}
